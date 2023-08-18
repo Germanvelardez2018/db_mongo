@@ -1,16 +1,12 @@
+#! /usr/bin/env python3
 import paho.mqtt.client as mqtt
 
+    
 
-
+from db import collection
 
 USER_ID = "inti2023"
 URL = "broker.hivemq.com"
-
-
-
-
-
-
 
 
 # The callback for when the client receives a CONNACK response from the server.
@@ -20,7 +16,11 @@ def on_connect(client, userdata, flags, rc):
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-    print(msg.topic+" "+ msg.payload.decode('utf-8'))
+    data = msg.payload.decode('utf-8')
+    print(msg.topic+" "+ data )
+    json = {}
+    json["data"]=data
+    collection.insert_one(json)
 
 
 
@@ -30,10 +30,6 @@ client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
 client.connect(URL,1883,60)
-
-
-
-
 
 
 class Connection():

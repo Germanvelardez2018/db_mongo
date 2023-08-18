@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 from mqtt import Connection
 
 
@@ -5,8 +6,6 @@ def App():
     print("app")
     con = Connection(sub_topic="CMD")
     con.loop()
-
-
 
 
 if __name__ == "__main__":
