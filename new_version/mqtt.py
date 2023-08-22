@@ -6,7 +6,8 @@ URL = "broker.hivemq.com"
 
 
 TOPIC_STATE = "STATE"
-TOPIC_DATA = "DATA_INFO"
+TOPIC_DATA = "CMD"
+TOPIC_OPT   ="OPT"
 
 
 
@@ -38,23 +39,19 @@ client.connect(URL,1883,60)
 class Connection():
     topics_sub = [
         TOPIC_STATE,
-        TOPIC_DATA
+        TOPIC_DATA,
+        TOPIC_OPT
     ]
     
     
     def __init__(self,user_id = USER_ID,url = URL,sub_topic = None ) -> None:
        
         for topic in self.topics_sub:
+            print(f"sub a"{topic})
             client.subscribe(topic)
 
 
   
-
-    def connection(self,url = None):
-        if url:
-            client.connect(url, 1883, 60)
-        else:
-            client.connect(self.url,1883,60)
 
 
     def loop(self):

@@ -14,6 +14,15 @@ def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
 
 
+
+
+
+
+def get_date(data):
+    return  data[2:10]
+
+
+
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
     data = msg.payload.decode('utf-8')
@@ -21,8 +30,13 @@ def on_message(client, userdata, msg):
     json = {}
     json["data"]=data
 
-    insert_data(json)
-    print(f"new document:added into collection")
+    if(msg.topic == "CMD"):
+      elements = data.split("\n")
+      for e in elements:
+        date = get_date(data)
+        print(f"date es {date}")
+  #  insert_data(json)
+
 
 
 
@@ -35,14 +49,14 @@ client.connect(URL,1883,60)
 
 
 class Connection():
-    topics_sub = []
+    topics_sub = ["STATE","CMD","OPT"]
     
     
     def __init__(self,user_id = USER_ID,url = URL,sub_topic = None ) -> None:
         self.id = user_id
         self.url = url
-        if sub_topic:
-            self.sub(sub_topic)
+        for topic in self.topics_sub:
+            client.subscribe(topic)
 
 
     def config(self,user_id=None, url = None):
@@ -52,16 +66,10 @@ class Connection():
             self.url = url
         
 
-    def sub(self,topic):
-        print(f"sub to {topic}")
-        self.topics_sub += topic
-        client.subscribe(topic)
 
 
-    def connection(self,url = None):
-        if url:
-            client.connect(url, 1883, 60)
-        else:
+    def connection(self):
+       
             client.connect(self.url,1883,60)
 
 
