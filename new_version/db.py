@@ -14,7 +14,7 @@ _database = None
 
 
 class DatabaseManager:
-    def __init__(self, config = None):
+    def __init__(self, config = {}):
         self.database_name = config.get("database", DATABASE_NAME)
         self.url = config.get("url", URL)
         self.client = pymongo.MongoClient(self.url)
@@ -36,7 +36,7 @@ class DatabaseManager:
             return None
 
     def list_collection(self, name_collection):
-        collection = self.database[name_collection]
+        collection = self.database[name_collection] 
         clist = collection.find({})
         for data in clist:
             print(data)
