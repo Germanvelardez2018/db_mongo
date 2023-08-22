@@ -1,12 +1,18 @@
 #! /usr/bin/env python3
 import paho.mqtt.client as mqtt
 
-    
-
-from db import insert_data
-
 USER_ID = "inti2023"
 URL = "broker.hivemq.com"
+
+
+TOPIC_STATE = "STATE"
+TOPIC_DATA = "DATA_INFO"
+
+
+
+
+
+
 
 
 # The callback for when the client receives a CONNACK response from the server.
@@ -18,11 +24,6 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     data = msg.payload.decode('utf-8')
     print(msg.topic+" "+ data )
-    json = {}
-    json["data"]=data
-
-    insert_data(json)
-    print(f"new document:added into collection")
 
 
 
@@ -35,28 +36,19 @@ client.connect(URL,1883,60)
 
 
 class Connection():
-    topics_sub = []
+    topics_sub = [
+        TOPIC_STATE,
+        TOPIC_DATA
+    ]
     
     
     def __init__(self,user_id = USER_ID,url = URL,sub_topic = None ) -> None:
-        self.id = user_id
-        self.url = url
-        if sub_topic:
-            self.sub(sub_topic)
+       
+        for topic in self.topics_sub:
+            client.subscribe(topic)
 
 
-    def config(self,user_id=None, url = None):
-        if user_id:
-            self.user_id = user_id
-        if url:
-            self.url = url
-        
-
-    def sub(self,topic):
-        print(f"sub to {topic}")
-        self.topics_sub += topic
-        client.subscribe(topic)
-
+  
 
     def connection(self,url = None):
         if url:
