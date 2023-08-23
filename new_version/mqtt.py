@@ -30,6 +30,15 @@ def get_date(data):
 def on_message(client, userdata, msg):
     data = msg.payload.decode('utf-8')
     #print(msg.topic+" "+ data )
+    if(msg.topic =='RETCMD'):
+        print(msg.topic+" "+ data )
+        client.publish("OPT","00:00:00:00", qos=2, retain=True) # Reinicio de comando
+
+        
+    if( msg.topic == 'OPT'):
+        print(msg.topic+" "+ data )
+    if(msg.topic =='STATE' ):
+        print(msg.topic+" "+ data )
     
     if(msg.topic == "CMD"):
       elements = data.split("|")
@@ -38,7 +47,6 @@ def on_message(client, userdata, msg):
         
         if date and id != "GPS SIN SEÑAL":
             print(f"id={id},date={date}")
-            print(f"[db]=>{e}")
             json = {}
             json["num"]=id
             json["data"]=e
@@ -50,6 +58,8 @@ def on_message(client, userdata, msg):
                 print("elemento repetido")
 
             else:
+                print(f"[db]=>{e}")
+
                 db.insert_data(date,**json)
 
 
@@ -65,7 +75,7 @@ client.connect(URL,1883,60)
 
 
 class Connection():
-    topics_sub = ["STATE","CMD","OPT"]
+    topics_sub = ["RETCMD","STATE","CMD","OPT"]
     
     
     def __init__(self,user_id = USER_ID,url = URL,sub_topic = None ) -> None:
