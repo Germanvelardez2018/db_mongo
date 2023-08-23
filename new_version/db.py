@@ -23,6 +23,7 @@ class DatabaseManager:
 
     def insert_data(self, collection, **data):
         try:
+            #Revisar si el dato ya fue almacenado
             return self.database[collection].insert_one(data)
         except Exception as e:
             print(f"Error inserting data: {str(e)}")
@@ -30,7 +31,7 @@ class DatabaseManager:
 
     def find_data(self, collection, **filters):
         try:
-            return self.database[collection].find(filters)
+            return self.database[collection].find_one(filters)
         except Exception as e:
             print(f"Error finding data: {str(e)}")
             return None

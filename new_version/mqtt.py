@@ -19,7 +19,10 @@ def on_connect(client, userdata, flags, rc):
 
 
 def get_date(data):
-    return  data[2:10]
+    elements = data.split(',')
+    if elements == "":
+        return None
+    return  elements[0],elements[0][1:9]
 
 
 
@@ -27,15 +30,27 @@ def get_date(data):
 def on_message(client, userdata, msg):
     data = msg.payload.decode('utf-8')
     print(msg.topic+" "+ data )
-    json = {}
-    json["data"]=data
-
     if(msg.topic == "CMD"):
-      elements = data.split("\n")
+      elements = data.split("|")
       for e in elements:
-        date = get_date(data)
-        print(f"date es {date}")
-        db.insert_data(date,**json)
+        id,date = get_date(e)
+        
+        if date:
+            #print(f"id={id},date={date}")
+            print(f"[db]=>{e}")
+            json = {}
+            json["num"]=id
+            json["data"]=e
+            #print(f"json:{json}")
+            obj = db.find_data(date,**{"num":id})
+           
+            #print(f"elemento encontrado {obj}")
+            if obj:
+                print("elemento repetido")
+
+            else:
+                db.insert_data(date,**json)
+
 
 
 
