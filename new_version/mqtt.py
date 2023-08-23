@@ -5,13 +5,13 @@ from  new_version.db import DatabaseManager
     
 db = DatabaseManager({})
 
-USER_ID = "inti2023"
+USER_ID = "INTI"
 URL = "broker.hivemq.com"
 
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
-    print("Connected with result code "+str(rc))
+    print("Conectado a servicio MQTT "+str(rc))
 
 
 
@@ -29,14 +29,15 @@ def get_date(data):
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
     data = msg.payload.decode('utf-8')
-    print(msg.topic+" "+ data )
+    #print(msg.topic+" "+ data )
+    
     if(msg.topic == "CMD"):
       elements = data.split("|")
       for e in elements:
         id,date = get_date(e)
         
-        if date:
-            #print(f"id={id},date={date}")
+        if date and id != "GPS SIN SEÑAL":
+            print(f"id={id},date={date}")
             print(f"[db]=>{e}")
             json = {}
             json["num"]=id
@@ -82,10 +83,6 @@ class Connection():
         
 
 
-
-    def connection(self):
-       
-            client.connect(self.url,1883,60)
 
 
     def loop(self):
