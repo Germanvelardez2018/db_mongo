@@ -1,5 +1,4 @@
 
-from db import database
 from  new_version.db import DatabaseManager
 from pprint import pprint
 from new_version.mqtt import Connection

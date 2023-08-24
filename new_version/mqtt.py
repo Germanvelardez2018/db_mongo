@@ -15,10 +15,8 @@ def on_connect(client, userdata, flags, rc):
 
 
 
-
-
-
 def get_date(data):
+    print(f"extraer datos de {data}")
     elements = data.split(',')
     if elements == "":
         return None
@@ -29,41 +27,31 @@ def get_date(data):
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
     data = msg.payload.decode('utf-8')
-    #print(msg.topic+" "+ data )
+    data = data[:-1] # Elimino el ultimo elemento 
+    print(f"{msg.topic} => {data}" )
     if(msg.topic =='RETCMD'):
-        print(msg.topic+" "+ data )
-        client.publish("OPT","00:00:00:00", qos=2, retain=True) # Reinicio de comando
-
-        
-    if( msg.topic == 'OPT'):
-        print(msg.topic+" "+ data )
-    if(msg.topic =='STATE' ):
-        print(msg.topic+" "+ data )
-    
-    if(msg.topic == "CMD"):
+        client.publish("OPT2","00:00:00:00", qos=2, retain=False) # Reinicio de comando
+        return
+    elif(msg.topic == "CMD"):
       elements = data.split("|")
+    
+      print(f"los valores obtenidos son {elements}")
       for e in elements:
         id,date = get_date(e)
-        
-        if date and id != "GPS SIN SEÑAL":
-            print(f"id={id},date={date}")
+        if date :
+            print(f"dato valido")
             json = {}
             json["num"]=id
             json["data"]=e
-            #print(f"json:{json}")
-            obj = db.find_data(date,**{"num":id})
-           
-            #print(f"elemento encontrado {obj}")
-            if obj:
-                print("elemento repetido")
-
-            else:
-                print(f"[db]=>{e}")
-
+            obj = db.find_data(date,**{"num":id})           
+            if obj == None:
+                print(f"dato insertado:{json}")
                 db.insert_data(date,**json)
-
-
-
+                
+        else:
+            print("dato invalido, descartar")
+            
+    return
 
 
 
@@ -75,7 +63,7 @@ client.connect(URL,1883,60)
 
 
 class Connection():
-    topics_sub = ["RETCMD","STATE","CMD","OPT"]
+    topics_sub = ["RETCMD","STATE","CMD","OPT2  "]
     
     
     def __init__(self,user_id = USER_ID,url = URL,sub_topic = None ) -> None:
