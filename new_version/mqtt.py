@@ -26,7 +26,7 @@ def get_date(data):
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-    data = msg.payload.decode('utf-8')
+    #data = msg.payload.decode('utf-8')
     data = data[:-1] # Elimino el ultimo elemento 
     print(f"{msg.topic} => {data}" )
     if(msg.topic =='RETCMD'):
@@ -34,8 +34,7 @@ def on_message(client, userdata, msg):
         return
     elif(msg.topic == "CMD"):
       elements = data.split("|")
-    
-      print(f"los valores obtenidos son {elements}")
+      #print(f"los valores obtenidos son {elements}")
       for e in elements:
         id,date = get_date(e)
         if date :
