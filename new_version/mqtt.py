@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 import paho.mqtt.client as mqtt
 from  new_version.db import DatabaseManager
-
+import time
     
 db = DatabaseManager({})
 
@@ -23,18 +23,24 @@ def get_date(data):
     return  elements[0],elements[0][1:9]
 
 
+last_command = None
+shadow_flag = 1 
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-    #data = msg.payload.decode('utf-8')
-    data = data[:-1] # Elimino el ultimo elemento 
-    print(f"{msg.topic} => {data}" )
-    if(msg.topic =='RETCMD'):
-        client.publish("OPT2","00:00:00:00", qos=2, retain=False) # Reinicio de comando
-        return
+    global last_command
+    global shadow_flag 
+    data = msg.payload.decode('utf-8')
+    topic = str(msg.topic)
+    if topic == 'SHADOW':
+        print(f"peticion de comando {data}")
+        last_command = data
+    elif(topic == "RETCMD"):
+        print(f"{topic}=>{data}")      
+        client.publish("SHADOW","00:00:00:00",qos=2,retain=True)
     elif(msg.topic == "CMD"):
+      data = data[:-1]
       elements = data.split("|")
-      #print(f"los valores obtenidos son {elements}")
       for e in elements:
         id,date = get_date(e)
         if date :
@@ -46,23 +52,36 @@ def on_message(client, userdata, msg):
             if obj == None:
                 print(f"dato insertado:{json}")
                 db.insert_data(date,**json)
-                
         else:
             print("dato invalido, descartar")
-            
-    return
+    elif(topic == 'STATE'):
+       
+        print(f"{topic}=>{data}")
+        if last_command:
+            counter = 0  
+            while counter <100:     
+                client.publish("OPT",last_command,qos=2,retain=True)
+                counter+=1
+            last_command = None
+    else:
+        #print(f"{topic}=>{data}")
+        pass
+        
+    
+
+    
 
 
 
 
-client = mqtt.Client()
+client = mqtt.Client(client_id="INTI2023")
 client.on_connect = on_connect
 client.on_message = on_message
 client.connect(URL,1883,60)
 
 
 class Connection():
-    topics_sub = ["RETCMD","STATE","CMD","OPT2  "]
+    topics_sub = ["SHADOW","RETCMD","STATE","CMD","OPT"]
     
     
     def __init__(self,user_id = USER_ID,url = URL,sub_topic = None ) -> None:
@@ -71,13 +90,6 @@ class Connection():
         for topic in self.topics_sub:
             client.subscribe(topic)
 
-
-    def config(self,user_id=None, url = None):
-        if user_id:
-            self.user_id = user_id
-        if url:
-            self.url = url
-        
 
 
 
