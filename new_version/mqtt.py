@@ -83,7 +83,7 @@ def on_message(client, userdata, msg):
 
 
 
-client = mqtt.Client(client_id="INTI2023")
+client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
 client.connect(URL,1883,60)
