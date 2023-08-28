@@ -2,7 +2,12 @@
 import paho.mqtt.client as mqtt
 from  new_version.db import DatabaseManager
 import time
-    
+from colorama import Fore, Back, Style, init
+
+
+
+init() # Colorama
+
 db = DatabaseManager({})
 
 USER_ID = "INTI"
@@ -16,7 +21,7 @@ def on_connect(client, userdata, flags, rc):
 
 
 def get_date(data):
-    print(f"extraer datos de {data}")
+    #print(f"extraer datos de {data}")
     elements = data.split(',')
     if elements == "":
         return None
@@ -33,7 +38,8 @@ def on_message(client, userdata, msg):
     data = msg.payload.decode('utf-8')
     topic = str(msg.topic)
     if topic == 'SHADOW':
-        print(f"peticion de comando {data}")
+        print(Fore.BLUE+f"Peticion  de comando {data}")
+        print(Style.RESET_ALL)
         last_command = data
     elif(topic == "RETCMD"):
         print(f"{topic}=>{data}")      
@@ -44,19 +50,22 @@ def on_message(client, userdata, msg):
       for e in elements:
         id,date = get_date(e)
         if date :
-            print(f"dato valido")
+            #print(Fore.BLUE+f"dato valido")
             json = {}
             json["num"]=id
             json["data"]=e
             obj = db.find_data(date,**{"num":id})           
             if obj == None:
-                print(f"dato insertado:{json}")
+                
+                print(Fore.BLUE + f"dato insertado:{json}")
+                print(Style.RESET_ALL)
+
                 db.insert_data(date,**json)
         else:
             print("dato invalido, descartar")
     elif(topic == 'STATE'):
-       
-        print(f"{topic}=>{data}")
+        print(Fore.GREEN+f"{topic}=>{data}")
+        print(Style.RESET_ALL)
         if last_command:
             counter = 0  
             while counter <100:     
