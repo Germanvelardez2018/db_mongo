@@ -1,75 +1,95 @@
 #! /usr/bin/env python3
 import paho.mqtt.client as mqtt
 from  new_version.db import DatabaseManager
-import time
 from colorama import Fore, Back, Style, init
-
-
 
 init() # Colorama
 
 db = DatabaseManager({})
 
+
+MSG_CMD =[
+    "CONFIGURO INTERVALO ",
+    "CONFIGURO MAXIMO DE MUESTRAS",
+    "FORZAR EXTRACCION DE INFORMACION ",
+    "MODO DEBUG",
+    "FLAGS"
+]
+
+
+
 USER_ID = "INTI"
 URL = "broker.hivemq.com"
+RETURN_COMAND = "00:00:00:00"
+last_command = None
+
+
 
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
-    print("Conectado a servicio MQTT "+str(rc))
+    print("Conectado a servicio MQTT")
 
 
 
-def get_date(data):
-    #print(f"extraer datos de {data}")
+def _get_date(data):
+    """
+    Extrae la fecha de la nmea gps
+    """
     elements = data.split(',')
     if elements == "":
         return None
     return  elements[0],elements[0][1:9]
 
 
-last_command = None
-shadow_flag = 1 
+def _insert_data(id,date,data):
+            json = {}
+            json["num"]=id
+            json["data"]=data
+            obj = db.find_data(date,**{"num":id})           
+            if obj == None:
+                print(Fore.BLUE + f"dato insertado:{json}")
+                print(Style.RESET_ALL)
+                db.insert_data(date,**json)
+
+
+
+
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
     global last_command
-    global shadow_flag 
     data = msg.payload.decode('utf-8')
     topic = str(msg.topic)
+
     if topic == 'SHADOW':
-        print(Fore.BLUE+f"Peticion  de comando {data}")
-        print(Style.RESET_ALL)
+        params = data.split(':')
+        index =  int((params[0]))
+        if index >0:
+            print(f"[APLICACION]=>{MSG_CMD[index-1]}")
+            print(Style.RESET_ALL)
         last_command = data
     elif(topic == "RETCMD"):
-        print(f"{topic}=>{data}")      
-        client.publish("SHADOW","00:00:00:00",qos=2,retain=True)
+        print(f"{data}<=[drifter]")      
+        client.publish("SHADOW",RETURN_COMAND,qos=1,retain=False)
     elif(msg.topic == "CMD"):
       data = data[:-1]
       elements = data.split("|")
-      for e in elements:
-        id,date = get_date(e)
+      for _data in elements:
+        id,date = _get_date(_data)
         if date :
-            #print(Fore.BLUE+f"dato valido")
-            json = {}
-            json["num"]=id
-            json["data"]=e
-            obj = db.find_data(date,**{"num":id})           
-            if obj == None:
-                
-                print(Fore.BLUE + f"dato insertado:{json}")
-                print(Style.RESET_ALL)
-
-                db.insert_data(date,**json)
+            _insert_data(id,date,_data)
+      
         else:
-            print("dato invalido, descartar")
+            print(Fore.RED+"dato invalido, descartar")
+            print(Style.RESET_ALL)
     elif(topic == 'STATE'):
-        print(Fore.GREEN+f"{topic}=>{data}")
+        print(Fore.GREEN+f"{data}<= [drifter]")
         print(Style.RESET_ALL)
         if last_command:
             counter = 0  
             while counter <100:     
-                client.publish("OPT",last_command,qos=2,retain=True)
+                client.publish("OPT",last_command,qos=1,retain=True)
                 counter+=1
             last_command = None
     else:
@@ -78,7 +98,11 @@ def on_message(client, userdata, msg):
         
     
 
-    
+
+
+
+
+
 
 
 
@@ -92,15 +116,11 @@ client.connect(URL,1883,60)
 class Connection():
     topics_sub = ["SHADOW","RETCMD","STATE","CMD","OPT"]
     
-    
     def __init__(self,user_id = USER_ID,url = URL,sub_topic = None ) -> None:
         self.id = user_id
         self.url = url
         for topic in self.topics_sub:
             client.subscribe(topic)
-
-
-
 
 
     def loop(self):

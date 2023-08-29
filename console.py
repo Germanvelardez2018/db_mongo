@@ -12,7 +12,6 @@ class Console:
     def __init__(self,config = {}):
       
        self.db = DatabaseManager(config)
-       print("before conection")
        self.connection = Connection()
 
 
