@@ -10,9 +10,10 @@ from new_version.mqtt import Connection
 class Console:
 
     def __init__(self,config = {}):
-      
-       self.db = DatabaseManager(config)
-       self.connection = Connection()
+        topics_sub = ["SHADOW","RETCMD","STATE","CMD","EXC"]
+
+        self.db = DatabaseManager(config)
+        self.connection = Connection(topics_sub)
 
 
 

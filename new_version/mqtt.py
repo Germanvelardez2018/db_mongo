@@ -17,7 +17,6 @@ MSG_CMD =[
 ]
 
 
-
 USER_ID = "INTI"
 URL = "broker.hivemq.com"
 RETURN_COMAND = "00:00:00:00"
@@ -89,7 +88,7 @@ def on_message(client, userdata, msg):
         if last_command:
             counter = 0  
             while counter <100:     
-                client.publish("OPT",last_command,qos=1,retain=True)
+                client.publish("EXC",last_command,qos=1,retain=False)
                 counter+=1
             last_command = None
     else:
@@ -97,16 +96,6 @@ def on_message(client, userdata, msg):
         pass
         
     
-
-
-
-
-
-
-
-
-
-
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
@@ -114,14 +103,11 @@ client.connect(URL,1883,60)
 
 
 class Connection():
-    topics_sub = ["SHADOW","RETCMD","STATE","CMD","OPT"]
     
-    def __init__(self,user_id = USER_ID,url = URL,sub_topic = None ) -> None:
-        self.id = user_id
-        self.url = url
-        for topic in self.topics_sub:
-            client.subscribe(topic)
-
+    def __init__(self,sub_topic = None ) -> None:
+        if sub_topic:
+            for topic in sub_topic:
+                client.subscribe(topic)
 
     def loop(self):
         client.loop_forever()
